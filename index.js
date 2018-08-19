@@ -23,7 +23,7 @@ client.on("message", message => {
         message.channel.send("It's a command!")
             .then(_ => {
                 console.log("Trying to match a command...");
-                doCommand(split);
+                doCommand(split, client);
             });
     }
 });

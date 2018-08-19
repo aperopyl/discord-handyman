@@ -1,24 +1,25 @@
-const Hello = require("./Hello");
+const Command = require("./Command");
+
+const weatherPlugin = require("../plugins/weather");
 
 const COMMANDS = [
-    new Hello()
+    new Command("weather", weatherPlugin)
 ];
 
-const doCommand = command => {
+const doCommand = (command, discord) => {
     if (!command || !command.length) {
         return;
     }
 
     // Try and match a command with a handler.
     try {
-        for (let i = 0; i < COMMANDS.length; i++) {
-            const cmd = COMMANDS[i];
+        const cmd = COMMANDS.find(test => test.shouldAccept(command));
 
-            if (cmd.shouldAccept(command)) {
-                cmd.execute(command);
-            }
+        if (cmd && cmd.execute) {
+            cmd.execute(command, discord);
         }
     } catch (e) {
+        throw e;
     }
 };
 
