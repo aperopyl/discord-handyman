@@ -1,10 +1,8 @@
-const Discord = require("discord.js");
-const doCommand = require("./src/commands/commands");
-const { splitMessage, isCommand } = require("./src/utils");
+const client = require("./DiscordClient");
+const doCommand = require("./commands/commands");
+const { splitMessage, isCommand } = require("./utils");
 
 const { TOKEN } = process.env;
-
-const client = new Discord.Client();
 
 client.on("guildCreate", guild => {
 });
