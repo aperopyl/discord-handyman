@@ -27,10 +27,10 @@ class Command {
         return false;
     }
 
-    execute(command) {
+    execute(command, message) {
         if (typeof this.plugin === "function") {
             try {
-                this.plugin(...command);
+                this.plugin(command, message);
             } catch (e) {
                 const error = new Error(`Failed to execute command: ${e}`);
                 error.name = "Command Error";

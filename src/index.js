@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const client = require("./DiscordClient");
 const doCommand = require("./commands/commands");
 const { splitMessage, isCommand } = require("./utils");
@@ -18,10 +20,13 @@ client.on("message", message => {
     if (itIs) {
         split.shift();
 
-        message.channel.send("It's a command!")
+        message.channel.send("Working...")
             .then(_ => {
                 console.log("Trying to match a command...");
-                doCommand(split, client);
+
+                // Try to match the command and make the message
+                // available to it.
+                doCommand(split, message);
             });
     }
 });

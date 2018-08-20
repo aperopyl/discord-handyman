@@ -10,6 +10,20 @@ const isCommand = split => {
     return false;
 };
 
+const matchCommandAndExecute = (commands, command, ...args) => {
+    if (command && commands) {
+        const cmd = commands.find(test => test.shouldAccept(command));
+
+        if (cmd && cmd.execute) {
+            cmd.execute(command, ...args);
+
+            return true;
+        }
+    }
+
+    return false;
+};
+
 const critical = (
     condition,
     message
@@ -25,5 +39,6 @@ const critical = (
 module.exports = {
     splitMessage,
     isCommand,
+    matchCommandAndExecute,
     critical
 };
