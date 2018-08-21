@@ -1,3 +1,4 @@
+const { RichEmbed } = require("discord.js");
 const axios = require("axios");
 
 const { getRequestURL } = require("./env");
@@ -21,47 +22,76 @@ const weatherRightNow = (args, message) => {
 
     axios.default.get(resolveLocation)
         .then(resp => resp.data)
-        .then(data => new Promise((resolve, reject) => {
-            if (data && data.length) {
-                const first = data[0];
-
-                const req = getRequestURL(
-                    `/currentconditions/v1/${first.Key}`
-                );
-
-                console.log(`Requesting weather data... ${req}`);
-
-                axios.default.get(req)
-                    .then(resp => resolve({
-                        location: first,
-                        current: resp.data
-                    }))
-                    .catch(error => reject(error));
-            } else {
-                reject(new Error("No locations found!"));
+        .then(data => {
+            if (!data || !data.length) {
+                throw new Error("No locations found!");
             }
-        }))
-        .then(location => {
+
+            const firstResult = data[0];
+
+            return Promise.all([
+                new Promise((resolve, reject) => {
+                    // Request for current conditions
+
+                    const req = getRequestURL(
+                        `/currentconditions/v1/${firstResult.Key}`
+                    );
+
+                    console.log(`Requesting weather data... ${req}`);
+
+                    axios.default.get(req)
+                        .then(resp => resolve({
+                            location: firstResult,
+                            current: resp.data
+                        }))
+                        .catch(error => reject(error));
+                }),
+                new Promise((resolve, reject) => {
+                    // Request for the next 12 hours
+
+                    const req = getRequestURL(
+                        `/forecasts/v1/hourly/12hour/${firstResult.key}`
+                    );
+
+                    axios.default.get(req)
+                        .then(resp => resolve({
+                            data: resp.data
+                        }))
+                        .catch(error => reject(error));
+                })
+            ]);
+        })
+        .then(([location, hourly]) => {
             // Got the data
             // https://developer.accuweather.com/accuweather-current-conditions-api/apis/get/currentconditions/v1/%7BlocationKey%7D
             const local = location.location;
             const currentConditions = location.current;
+
+            console.log("HOURLY:", hourly);
 
             if (currentConditions && currentConditions.length) {
                 const {
                     WeatherText: status,
                     Temperature: temperature
                 } = currentConditions[0];
-                const messages = [];
+                const embed = new RichEmbed();
+                embed
+                    .setTitle(`Current weather for **${local.LocalizedName}**`)
+                    .addField(
+                        "Condition",
+                        `**${status} °F**`
+                    )
+                    .addField(
+                        "Temperature",
+                        `**${temperature.Imperial.Value}**`
+                    );
 
-                messages.push(`It is currently **${status}** in **${local.LocalizedName}**!`);
-                messages.push(`Current Temperature: **${temperature.Imperial.Value} F**`);
-
-                message.channel.send(messages.join("\n"));
+                message.channel.send(embed);
             }
         })
         .catch(error => {
             message.channel.send(`Weather data **${loc}** was not found!`);
+            console.error(error);
         });
 
     return true;
